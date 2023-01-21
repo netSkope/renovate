@@ -218,6 +218,7 @@ function resolveRegistryUrls(
   let resolvedUrls: string[] = [];
   if (is.nonEmptyArray(customUrls)) {
     resolvedUrls = [...customUrls];
+    resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);
   } else if (is.nonEmptyArray(defaultRegistryUrls)) {
     resolvedUrls = [...defaultRegistryUrls];
     resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);

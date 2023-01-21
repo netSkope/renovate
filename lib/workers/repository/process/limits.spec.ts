@@ -74,6 +74,25 @@ describe('workers/repository/process/limits', () => {
       expect(res).toBe(19);
     });
 
+    it('calculates concurrent limit remaining with higherPriorityHandleMode=exceed-concurrent-limit', async () => {
+      config.prConcurrentLimit = 20;
+      config.higherPriorityHandleMode = 'exceed-concurrent-limit';
+      platform.getBranchPr.mockImplementation((branchName) =>
+        branchName
+          ? Promise.resolve({
+              sourceBranch: branchName,
+              state: 'open',
+            } as never)
+          : Promise.reject('some error')
+      );
+      const branches: BranchConfig[] = [
+        { branchName: 'test' },
+        { branchName: null },
+      ] as never;
+      const res = await limits.getConcurrentPrsRemaining(config, branches);
+      expect(res).toBe(20);
+    });
+
     it('returns 99 if no concurrent limit', async () => {
       const res = await limits.getConcurrentPrsRemaining(config, []);
       expect(res).toBe(99);
@@ -103,6 +122,16 @@ describe('workers/repository/process/limits', () => {
         { branchName: 'foo' },
       ] as never);
       expect(res).toBe(19);
+    });
+
+    it('calculates concurrent limit remaining with higherPriorityHandleMode=exceed-concurrent-limit', () => {
+      config.branchConcurrentLimit = 20;
+      config.higherPriorityHandleMode = 'exceed-concurrent-limit';
+      git.branchExists.mockReturnValueOnce(true);
+      const res = limits.getConcurrentBranchesRemaining(config, [
+        { branchName: 'foo' },
+      ] as never);
+      expect(res).toBe(20);
     });
 
     it('defaults to prConcurrentLimit', () => {

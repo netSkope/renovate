@@ -189,6 +189,10 @@ export interface RegExManager extends RegexManagerTemplates {
 
 export type UseBaseBranchConfigType = 'merge' | 'none';
 
+export type HigherPriorityHandleModeConfigType =
+  | 'exceed-concurrent-limit'
+  | 'none';
+
 // TODO: Proper typings
 export interface RenovateConfig
   extends LegacyAdminConfig,
@@ -230,6 +234,7 @@ export interface RenovateConfig
   postUpdateOptions?: string[];
   prConcurrentLimit?: number;
   prHourlyLimit?: number;
+  higherPriorityHandleMode?: HigherPriorityHandleModeConfigType;
 
   defaultRegistryUrls?: string[];
   registryUrls?: string[] | null;
