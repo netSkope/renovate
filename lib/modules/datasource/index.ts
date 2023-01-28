@@ -129,60 +129,60 @@ async function huntRegistries(
   return null;
 }
 
-// async function mergeRegistries(
-//   config: GetReleasesInternalConfig,
-//   datasource: DatasourceApi,
-//   registryUrls: string[]
-// ): Promise<ReleaseResult | null> {
-//   let combinedRes: ReleaseResult | undefined;
-//   let caughtError: Error | undefined;
-//   for (const registryUrl of registryUrls) {
-//     try {
-//       const res = await getRegistryReleases(datasource, config, registryUrl);
-//       if (!res) {
-//         continue;
-//       }
-//       if (combinedRes) {
-//         for (const existingRelease of combinedRes.releases || []) {
-//           existingRelease.registryUrl ??= combinedRes.registryUrl;
-//         }
-//         for (const additionalRelease of res.releases || []) {
-//           additionalRelease.registryUrl = res.registryUrl;
-//         }
-//         combinedRes = { ...res, ...combinedRes };
-//         delete combinedRes.registryUrl;
-//         combinedRes.releases = [...combinedRes.releases, ...res.releases];
-//       } else {
-//         combinedRes = res;
-//       }
-//     } catch (err) {
-//       if (err instanceof ExternalHostError) {
-//         throw err;
-//       }
-//       // We'll always save the last-thrown error
-//       caughtError = err;
-//       logger.trace({ err }, 'datasource merge failure');
-//     }
-//   }
-//   // De-duplicate releases
-//   if (combinedRes?.releases?.length) {
-//     const seenVersions = new Set<string>();
-//     combinedRes.releases = combinedRes.releases.filter((release) => {
-//       if (seenVersions.has(release.version)) {
-//         return false;
-//       }
-//       seenVersions.add(release.version);
-//       return true;
-//     });
-//   }
-//   if (combinedRes) {
-//     return combinedRes;
-//   }
-//   if (caughtError) {
-//     throw caughtError;
-//   }
-//   return null;
-// }
+async function mergeRegistries(
+  config: GetReleasesInternalConfig,
+  datasource: DatasourceApi,
+  registryUrls: string[]
+): Promise<ReleaseResult | null> {
+  let combinedRes: ReleaseResult | undefined;
+  let caughtError: Error | undefined;
+  for (const registryUrl of registryUrls) {
+    try {
+      const res = await getRegistryReleases(datasource, config, registryUrl);
+      if (!res) {
+        continue;
+      }
+      if (combinedRes) {
+        for (const existingRelease of combinedRes.releases || []) {
+          existingRelease.registryUrl ??= combinedRes.registryUrl;
+        }
+        for (const additionalRelease of res.releases || []) {
+          additionalRelease.registryUrl = res.registryUrl;
+        }
+        combinedRes = { ...res, ...combinedRes };
+        delete combinedRes.registryUrl;
+        combinedRes.releases = [...combinedRes.releases, ...res.releases];
+      } else {
+        combinedRes = res;
+      }
+    } catch (err) {
+      if (err instanceof ExternalHostError) {
+        throw err;
+      }
+      // We'll always save the last-thrown error
+      caughtError = err;
+      logger.trace({ err }, 'datasource merge failure');
+    }
+  }
+  // De-duplicate releases
+  if (combinedRes?.releases?.length) {
+    const seenVersions = new Set<string>();
+    combinedRes.releases = combinedRes.releases.filter((release) => {
+      if (seenVersions.has(release.version)) {
+        return false;
+      }
+      seenVersions.add(release.version);
+      return true;
+    });
+  }
+  if (combinedRes) {
+    return combinedRes;
+  }
+  if (caughtError) {
+    throw caughtError;
+  }
+  return null;
+}
 
 function massageRegistryUrls(registryUrls: string[]): string[] {
   return registryUrls.filter(Boolean).map(trimTrailingSlash);
@@ -307,7 +307,7 @@ async function fetchReleases(
       } else if (registryStrategy === 'hunt') {
         dep = await huntRegistries(config, datasource, registryUrls);
       } else if (registryStrategy === 'merge') {
-        //dep = await mergeRegistries(config, datasource, registryUrls);
+        dep = await mergeRegistries(config, datasource, registryUrls);
       }
     } else {
       dep = await datasource.getReleases(config);

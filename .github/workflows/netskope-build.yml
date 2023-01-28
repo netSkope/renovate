@@ -9,16 +9,14 @@ on:
 
 env:
   DEFAULT_BRANCH: netskope@main
-  NODE_VERSION: 14
+  NODE_VERSION: 16
 
 jobs:
   release:
-    runs-on: ['self-hosted', 'linux', 'x64', 'bazel']
+    runs-on: ['self-hosted', 'linux', 'x64', 'docker-in-docker']
 
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
 
       - name: calculate-the-version
         id: ep_versioner
@@ -30,18 +28,21 @@ jobs:
           mkdir -p .$VERSIONER_DIR
           curl -o .$VERSIONER https://artifactory-rd.netskope.io/artifactory/$VERSIONER
           chmod 755 .$VERSIONER
-          EP_RENOVATE_VERSION=$(.$VERSIONER calc)
+          EP_RENOVATE_VERSION=$(.$VERSIONER calc --deepen)
           echo EP_RENOVATE_VERSION=$EP_RENOVATE_VERSION
           echo "::set-output name=EP_RENOVATE_VERSION::$EP_RENOVATE_VERSION"
 
       - name: Set up Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b # tag=v3.5.0
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Clone docker-renovate
-        run: git clone https://github.com/renovatebot/docker-renovate
+        run: |
+          git clone https://github.com/renovatebot/docker-renovate
+          cd docker-renovate
+          git reset --hard 5da5ad37dec846546ea7d7fb529b97270b8f6026
 
       - name: fix Dockerfile
         run: |
