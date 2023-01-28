@@ -218,17 +218,14 @@ function resolveRegistryUrls(
   let resolvedUrls: string[] = [];
   if (is.nonEmptyArray(customUrls)) {
     resolvedUrls = [...customUrls];
-    resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);
   } else if (is.nonEmptyArray(defaultRegistryUrls)) {
     resolvedUrls = [...defaultRegistryUrls];
-    resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);
   } else if (is.function_(datasource.defaultRegistryUrls)) {
     resolvedUrls = [...datasource.defaultRegistryUrls()];
-    resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);
   } else if (is.nonEmptyArray(datasource.defaultRegistryUrls)) {
     resolvedUrls = [...datasource.defaultRegistryUrls];
-    resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);
   }
+  resolvedUrls = resolvedUrls.concat(additionalRegistryUrls ?? []);
   return massageRegistryUrls(resolvedUrls);
 }
 
