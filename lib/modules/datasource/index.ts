@@ -285,11 +285,14 @@ async function fetchReleases(
     config.additionalRegistryUrls
   );
 
+  const packageName = config.packageName;
   logger.trace(
-    'datasource resolved urls',
-    datasource.id,
-    config.packageName,
-    registryUrls
+    {
+      datasource,
+      packageName,
+      registryUrls,
+    },
+    'datasource resolved urls'
   );
 
   let dep: ReleaseResult | null = null;
