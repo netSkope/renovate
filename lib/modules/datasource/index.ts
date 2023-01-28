@@ -284,6 +284,14 @@ async function fetchReleases(
     registryUrls,
     config.additionalRegistryUrls
   );
+
+  logger.trace(
+    'datasource resolved urls',
+    datasource.id,
+    config.packageName,
+    registryUrls
+  );
+
   let dep: ReleaseResult | null = null;
   const registryStrategy = datasource.registryStrategy ?? 'hunt';
   try {
