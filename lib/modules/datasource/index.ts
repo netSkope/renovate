@@ -279,23 +279,11 @@ async function fetchReleases(
     return null;
   }
 
-  logger.warn('about to resolveRegistryUrls');
-
   registryUrls = resolveRegistryUrls(
     datasource,
     config.defaultRegistryUrls,
     registryUrls,
     config.additionalRegistryUrls
-  );
-
-  const packageName = config.packageName;
-  logger.warn(
-    {
-      datasource,
-      packageName,
-      registryUrls,
-    },
-    'datasource resolved urls'
   );
 
   let dep: ReleaseResult | null = null;
