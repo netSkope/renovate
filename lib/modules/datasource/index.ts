@@ -278,6 +278,9 @@ async function fetchReleases(
   if (!datasource) {
     return null;
   }
+
+  logger.trace('about to resolveRegistryUrls');
+
   registryUrls = resolveRegistryUrls(
     datasource,
     config.defaultRegistryUrls,
