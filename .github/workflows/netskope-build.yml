@@ -22,7 +22,7 @@ jobs:
         id: ep_versioner
         run: |
           PLATFORM=$(echo $(uname -s)_$(uname -m) | tr '[:upper:]' '[:lower:]')
-          VERSIONER_VERSION=22.90.205
+          VERSIONER_VERSION=23.81.20
           VERSIONER_DIR=ep-tools/ep-versioner/$VERSIONER_VERSION/$PLATFORM
           VERSIONER=$VERSIONER_DIR/ep-versioner
           mkdir -p .$VERSIONER_DIR
