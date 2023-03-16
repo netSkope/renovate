@@ -126,10 +126,14 @@ export function generateBranchConfig(
       }
     }
   }
+
+  const groupName = branchUpgrades[0].groupName ?? '';
+
   const groupEligible =
     depNames.length > 1 ||
     toVersions.length > 1 ||
-    (!toVersions[0] && newValue.length > 1);
+    (!toVersions[0] && newValue.length > 1) ||
+    (depNames.length === 1 && groupName.includes(depNames[0]));
 
   const typesGroup =
     depNames.length > 1 && !hasGroupName && isTypesGroup(branchUpgrades);

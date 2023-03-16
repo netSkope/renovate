@@ -1,3 +1,4 @@
+import fs from 'fs';
 import is from '@sindresorhus/is';
 import type { RenovateConfig } from '../../../config/types';
 import { logger } from '../../../logger';
@@ -182,6 +183,35 @@ async function fetchVulnerabilities(
   }
 }
 
+function savePackageFiles(
+  config: RenovateConfig,
+  packageFiles: Record<string, PackageFile[]>
+): void {
+  const root = '/tmp/renovate-output';
+  if (!fs.existsSync(root)) {
+    return;
+  }
+
+  const repository = config['repository'] ?? '';
+  const [org, repo] = repository.split('/');
+  if (org === '' || repo === '') {
+    return;
+  }
+
+  const baseBranch = config['baseBranch'];
+  const directory = [root, org].join('/');
+  const filepath = [
+    directory,
+    [repo, baseBranch, 'package-files.json'].join('-'),
+  ].join('/');
+  try {
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(filepath, JSON.stringify(packageFiles));
+  } catch (err) {
+    logger.error({ err }, 'Failed to save the output packageFiles file');
+  }
+}
+
 export async function lookup(
   config: RenovateConfig,
   packageFiles: Record<string, PackageFile[]>
@@ -197,7 +227,10 @@ export async function lookup(
     { baseBranch: config.baseBranch, config: packageFiles },
     'packageFiles with updates'
   );
-  sortBranches(branches);
+
+  savePackageFiles(config, packageFiles);
+
+  await sortBranches(branches);
   return { branches, branchList, packageFiles };
 }
 

@@ -93,6 +93,16 @@ function hasNotIgnoredReviewers(pr: Pr, config: BranchConfig): boolean {
   return pr.reviewers ? pr.reviewers.length > 0 : false;
 }
 
+function existingPrResult(
+  config: BranchConfig,
+  existingPr: Pr
+): EnsurePrResult {
+  if (config.higherPriorityHandleMode === 'exceed-concurrent-limit') {
+    incLimitedValue('PullRequests');
+  }
+  return { type: 'with-pr', pr: existingPr };
+}
+
 // Ensures that PR exists with matching title/body
 export async function ensurePr(
   prConfig: BranchConfig
@@ -332,7 +342,7 @@ export async function ensurePr(
         logger.debug(
           `Pull Request #${existingPr.number} does not need updating`
         );
-        return { type: 'with-pr', pr: existingPr };
+        return existingPrResult(config, existingPr);
       }
       // PR must need updating
       if (existingPrTitle !== newPrTitle) {
@@ -364,7 +374,8 @@ export async function ensurePr(
         logger.info({ pr: existingPr.number, prTitle }, `PR updated`);
         setPrCache(branchName, prFingerprint, true);
       }
-      return { type: 'with-pr', pr: existingPr };
+
+      return existingPrResult(config, existingPr);
     }
     logger.debug({ branch: branchName, prTitle }, `Creating PR`);
     if (config.updateType === 'rollback') {
@@ -471,7 +482,7 @@ export async function ensurePr(
     logger.error({ err }, 'Failed to ensure PR: ' + prTitle);
   }
   if (existingPr) {
-    return { type: 'with-pr', pr: existingPr };
+    return existingPrResult(config, existingPr);
   }
   return { type: 'without-pr', prBlockedBy: 'Error' };
 }
