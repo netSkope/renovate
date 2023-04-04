@@ -119,6 +119,7 @@ export async function checkBranchDepsMatchBaseDeps(
       upgrade
     )!;
     const branchDeps = res!.deps;
+    logger.debug({baseDeps, branchDeps}, 'baseDeps and branchDeps');
     return getDepsSignature(baseDeps!) === getDepsSignature(branchDeps);
   } catch (err) /* istanbul ignore next */ {
     logger.info(
