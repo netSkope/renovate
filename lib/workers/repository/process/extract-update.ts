@@ -202,7 +202,7 @@ function savePackageFiles(
   const directory = [root, org].join('/');
   const filepath = [
     directory,
-    [repo, baseBranch, 'package-files.json'].join('-'),
+    [repo, baseBranch, 'package-files.json'].join(','),
   ].join('/');
   try {
     fs.mkdirSync(directory, { recursive: true });
