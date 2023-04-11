@@ -185,7 +185,8 @@ async function fetchVulnerabilities(
 
 function savePackageFiles(
   config: RenovateConfig,
-  packageFiles: Record<string, PackageFile[]>
+  name: string,
+  object: any
 ): void {
   const root = '/tmp/renovate-output';
   if (!fs.existsSync(root)) {
@@ -202,11 +203,11 @@ function savePackageFiles(
   const directory = [root, org].join('/');
   const filepath = [
     directory,
-    [repo, baseBranch, 'package-files.json'].join(','),
+    [repo, baseBranch, name + '.json'].join('-'),
   ].join('/');
   try {
     fs.mkdirSync(directory, { recursive: true });
-    fs.writeFileSync(filepath, JSON.stringify(packageFiles));
+    fs.writeFileSync(filepath, JSON.stringify(object));
   } catch (err) {
     logger.error({ err }, 'Failed to save the output packageFiles file');
   }
@@ -228,9 +229,11 @@ export async function lookup(
     'packageFiles with updates'
   );
 
-  savePackageFiles(config, packageFiles);
+  savePackageFiles(config, 'package-files', packageFiles);
 
   await sortBranches(branches);
+  savePackageFiles(config, 'branches', branches);
+
   return { branches, branchList, packageFiles };
 }
 
