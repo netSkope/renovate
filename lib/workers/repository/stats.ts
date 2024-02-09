@@ -31,7 +31,7 @@ export function printLookupStats(): void {
   logger.debug(data, 'Package lookup durations');
 }
 
-export function printRequestStats(): void {
+export function printRequestStats(): Record<string, number> {
   const packageCacheGets = (
     memCache.get<number[]>('package-cache-gets') ?? []
   ).sort(sortNumeric);
@@ -78,7 +78,7 @@ export function printRequestStats(): void {
   const httpRequests = memCache.get<RequestStats[]>('http-requests');
   // istanbul ignore next
   if (!httpRequests) {
-    return;
+    return {};
   }
   httpRequests.sort((a, b) => {
     if (a.url === b.url) {
@@ -109,7 +109,7 @@ export function printRequestStats(): void {
 
     // istanbul ignore if: TODO: fix types (#9610)
     if (!hostname) {
-      return;
+      return {};
     }
     requestHosts[hostname] = requestHosts[hostname] || [];
     requestHosts[hostname].push(httpRequest);
@@ -142,4 +142,6 @@ export function printRequestStats(): void {
     hostStats[hostname] = { requestCount, requestAvgMs, queueAvgMs };
   }
   logger.debug({ urls, hostStats, totalRequests }, 'http statistics');
+
+  return urls;
 }

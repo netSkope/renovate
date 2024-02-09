@@ -23,7 +23,7 @@ export function constructPipCompileCmd(
   outputFileName: string,
 ): string {
   const headers = constraintLineRegex.exec(content);
-  const args = ['pip-compile'];
+  const args = ['pip-compile', '--upgrade'];
   if (headers?.groups) {
     logger.debug(`Found pip-compile header: ${headers[0]}`);
     for (const argument of split(headers.groups.arguments)) {
