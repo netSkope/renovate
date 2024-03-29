@@ -36,30 +36,38 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Clone docker-renovate
-        run: |
-          git clone https://github.com/renovatebot/docker-renovate
-          cd docker-renovate
-          git reset --hard 5da5ad37dec846546ea7d7fb529b97270b8f6026
+      - name: Build
+        run: pnpm build
 
-      - name: fix Dockerfile
-        run: |
-          sed -i 's|16.19.0|20.6.1|' docker-renovate/Dockerfile
-          sed -i 's|yarn version --new-version ${RENOVATE_VERSION}|yarn version --new-version ${RENOVATE_VERSION} --no-git-tag-version|' docker-renovate/Dockerfile
-          sed -i 's|COPY bin/ /usr/local/bin/||' docker-renovate/Dockerfile
-
-      - name: Docker build
-        run: |
-          docker build . -f docker-renovate/Dockerfile \
-            -t artifactory.netskope.io/ep-tools-docker/instruments/renovate-slim:$TAG
+      - name: Build docker
+        run: pnpm build:docker build --tries=3
         env:
-          TAG: ${{ steps.ep_versioner.outputs.EP_RENOVATE_VERSION}}
+          LOG_LEVEL: debug
 
-      - name: Docker push
-        run: |
-          docker login --username ${NS_ARTIFACTORY_USER} --password ${NS_ARTIFACTORY_PASSWORD} artifactory.netskope.io
-          docker push artifactory.netskope.io/ep-tools-docker/instruments/renovate-slim:$TAG
-        env:
-          NS_ARTIFACTORY_PASSWORD: ${{secrets.NS_ARTIFACTORY_PASSWORD_LIMITED}}
-          NS_ARTIFACTORY_USER: ${{secrets.NS_ARTIFACTORY_USER_LIMITED}}
-          TAG: ${{ steps.ep_versioner.outputs.EP_RENOVATE_VERSION}}
+      # - name: Clone docker-renovate
+      #   run: |
+      #     git clone https://github.com/renovatebot/docker-renovate
+      #     cd docker-renovate
+      #     git reset --hard 5da5ad37dec846546ea7d7fb529b97270b8f6026
+
+      # - name: fix Dockerfile
+      #   run: |
+      #     sed -i 's|16.19.0|20.6.1|' docker-renovate/Dockerfile
+      #     sed -i 's|yarn version --new-version ${RENOVATE_VERSION}|yarn version --new-version ${RENOVATE_VERSION} --no-git-tag-version|' docker-renovate/Dockerfile
+      #     sed -i 's|COPY bin/ /usr/local/bin/||' docker-renovate/Dockerfile
+
+      # - name: Docker build
+      #   run: |
+      #     docker build . -f docker-renovate/Dockerfile \
+      #       -t artifactory.netskope.io/ep-tools-docker/instruments/renovate-slim:$TAG
+      #   env:
+      #     TAG: ${{ steps.ep_versioner.outputs.EP_RENOVATE_VERSION}}
+
+      # - name: Docker push
+      #   run: |
+      #     docker login --username ${NS_ARTIFACTORY_USER} --password ${NS_ARTIFACTORY_PASSWORD} artifactory.netskope.io
+      #     docker push artifactory.netskope.io/ep-tools-docker/instruments/renovate-slim:$TAG
+      #   env:
+      #     NS_ARTIFACTORY_PASSWORD: ${{secrets.NS_ARTIFACTORY_PASSWORD_LIMITED}}
+      #     NS_ARTIFACTORY_USER: ${{secrets.NS_ARTIFACTORY_USER_LIMITED}}
+      #     TAG: ${{ steps.ep_versioner.outputs.EP_RENOVATE_VERSION}}
