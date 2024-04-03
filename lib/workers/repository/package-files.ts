@@ -103,20 +103,28 @@ export class PackageFiles {
       }
 
       for (const manager of managers) {
-        deps += `<details><summary>${manager}</summary>\n<blockquote>\n\n`;
+        let managerResult = '';
         for (const packageFile of packageFiles[manager]) {
-          deps += `<details><summary>${packageFile.packageFile}</summary>\n\n`;
+          let packageFileResult = '';
           for (const dep of packageFile.deps) {
             const ver = dep.currentValue;
             const digest = dep.currentDigest;
             const version =
               ver && digest ? `${ver}@${digest}` : `${digest ?? ver!}`;
             // TODO: types (#22198)
-            deps += ` - \`${dep.depName!} ${version}\`\n`;
+            packageFileResult += ` - \`${dep.depName!} ${version}\`\n`;
           }
-          deps += '\n</details>\n\n';
+          if (packageFileResult.length > 0) {
+            managerResult += `<details><summary>${packageFile.packageFile}</summary>\n\n`;
+            managerResult += packageFileResult;
+            managerResult += '\n</details>\n\n';
+          }
         }
-        deps += `</blockquote>\n</details>\n\n`;
+        if (managerResult.length > 0) {
+          deps += `<details><summary>${manager}</summary>\n<blockquote>\n\n`;
+          deps += managerResult;
+          deps += `</blockquote>\n</details>\n\n`;
+        }
       }
       deps += pad ? '</blockquote>\n</details>\n\n' : '';
     }

@@ -124,6 +124,7 @@ export function extractPackageFile(
         depName,
         currentValue,
         datasource: PypiDatasource.id,
+        packageName: depName,
       };
       if (currentValue?.startsWith('==')) {
         dep.currentVersion = currentValue.replace(/^==\s*/, '');

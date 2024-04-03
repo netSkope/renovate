@@ -115,6 +115,21 @@ function hasNotIgnoredReviewers(pr: Pr, config: BranchConfig): boolean {
   return is.nonEmptyArray(pr.reviewers);
 }
 
+function existingPrResult(
+  config: BranchConfig,
+  existingPr: Pr
+): EnsurePrResult {
+  if (config.higherPriorityHandleMode === 'exceed-concurrent-limit') {
+    incLimitedValue('PullRequests');
+  }
+  return { type: 'with-pr', pr: existingPr };
+}
+
+function stripNetskopePrefix(prTitle: string): string {
+  // TODO: pass this down from the configuration
+  return prTitle.replace(/(^([A-Z]+-[0-9]+, )*[A-Z]+-[0-9]+: )/gi, '');
+}
+
 // Ensures that PR exists with matching title/body
 export async function ensurePr(
   prConfig: BranchConfig,
@@ -124,13 +139,9 @@ export async function ensurePr(
   const prBodyFingerprint = fingerprint(filteredPrConfig);
   logger.trace({ config }, 'ensurePr');
   // If there is a group, it will use the config of the first upgrade in the array
-  const {
-    branchName,
-    ignoreTests,
-    internalChecksAsSuccess,
-    prTitle = '',
-    upgrades,
-  } = config;
+  const { branchName, ignoreTests, internalChecksAsSuccess, upgrades } = config;
+  let prTitle = config.prTitle ?? '';
+
   const getBranchStatus = memoize(() =>
     resolveBranchStatus(branchName, !!internalChecksAsSuccess, ignoreTests),
   );
@@ -352,10 +363,22 @@ export async function ensurePr(
         logger.debug(`Setting assignees and reviewers as status checks failed`);
         await addParticipants(config, existingPr);
       }
+
       // Check if existing PR needs updating
       const existingPrTitle = stripEmojis(existingPr.title);
+      let newPrTitle = stripEmojis(prTitle);
+
+      if (stripNetskopePrefix(existingPrTitle) === newPrTitle) {
+        logger.debug(`The existing title is netskope modified, keep it as is`);
+        prTitle = existingPr.title;
+        newPrTitle = existingPrTitle;
+
+        // Update the config as well, just in case if some other reason causes update of the branch
+        prConfig.commitMessage = existingPr.title;
+        prConfig.prTitle = existingPr.title;
+      }
+
       const existingPrBodyHash = existingPr.bodyStruct?.hash;
-      const newPrTitle = stripEmojis(prTitle);
       const newPrBodyHash = hashBody(prBody);
 
       const prInitialLabels = existingPr.bodyStruct?.debugData?.labels;
@@ -379,7 +402,7 @@ export async function ensurePr(
         logger.debug(
           `Pull Request #${existingPr.number} does not need updating`,
         );
-        return { type: 'with-pr', pr: existingPr };
+        return existingPrResult(config, existingPr);
       }
 
       const updatePrConfig: UpdatePrConfig = {
@@ -456,15 +479,12 @@ export async function ensurePr(
         logger.info({ pr: existingPr.number, prTitle }, `PR updated`);
         setPrCache(branchName, prBodyFingerprint, true);
       }
-      return {
-        type: 'with-pr',
-        pr: {
-          ...existingPr,
-          bodyStruct: getPrBodyStruct(prBody),
-          title: prTitle,
-          targetBranch: config.baseBranch,
-        },
-      };
+      return existingPrResult(config, {
+        ...existingPr,
+        bodyStruct: getPrBodyStruct(prBody),
+        title: prTitle,
+        targetBranch: config.baseBranch,
+      });
     }
     logger.debug({ branch: branchName, prTitle }, `Creating PR`);
     if (config.updateType === 'rollback') {
@@ -572,7 +592,7 @@ export async function ensurePr(
     logger.error({ err }, 'Failed to ensure PR: ' + prTitle);
   }
   if (existingPr) {
-    return { type: 'with-pr', pr: existingPr };
+    return existingPrResult(config, existingPr);
   }
   return { type: 'without-pr', prBlockedBy: 'Error' };
 }

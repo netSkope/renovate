@@ -110,7 +110,7 @@ export function extractHeaderCommand(
     `pip-compile: found header in ${fileName}: \n${compileCommand[0]}`,
   );
   const command = compileCommand.groups.command;
-  const argv = [command];
+  const argv = [command, '--upgrade'];
   const isCustomCommand = command !== 'pip-compile';
   if (compileCommand.groups.arguments) {
     argv.push(...split(compileCommand.groups.arguments));

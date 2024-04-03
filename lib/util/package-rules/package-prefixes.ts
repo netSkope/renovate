@@ -22,7 +22,10 @@ export class PackagePrefixesMatcher extends Matcher {
     ) {
       return true;
     }
-    if (matchPackagePrefixes.some((prefix) => depName.startsWith(prefix))) {
+    if (
+      is.string(depName) &&
+      matchPackagePrefixes.some((prefix) => depName.startsWith(prefix))
+    ) {
       logger.once.info(
         { packageName, depName },
         'Use matchDepPatterns instead of matchPackagePrefixes',
