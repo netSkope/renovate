@@ -39,6 +39,28 @@ import { extractDependencies, updateRepo } from './process';
 import type { ExtractResult } from './process/extract-update';
 import { ProcessResult, processResult } from './result';
 
+function saveObject(config: RenovateConfig, name: string, object: any): void {
+  const root = '/tmp/renovate-output';
+  if (!fs.existsSync(root)) {
+    return;
+  }
+
+  const repository = config['repository'] ?? '';
+  const [org, repo] = repository.split('/');
+  if (org === '' || repo === '') {
+    return;
+  }
+
+  const directory = [root, org].join('/');
+  const filepath = [directory, [repo, name + '.json'].join(',')].join('/');
+  try {
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(filepath, JSON.stringify(object));
+  } catch (err) {
+    logger.error({ err }, 'Failed to save the ' + name + ' file');
+  }
+}
+
 // istanbul ignore next
 export async function renovateRepository(
   repoConfig: RenovateConfig,
@@ -104,7 +126,20 @@ export async function renovateRepository(
       }
       await finalizeRepo(config, branchList);
       // TODO #22198
+
       repoResult = processResult(config, res!);
+
+      const filteredBranches = branches.map((item) => ({
+        branchName: item.branchName,
+        result: item.result,
+
+        automerge: item.automerge,
+
+        labels: item.labels,
+        addLabels: item.addLabels,
+      }));
+
+      saveObject(config, 'branches', filteredBranches);
     }
     printRepositoryProblems(config.repository);
   } catch (err) /* istanbul ignore next */ {
@@ -143,6 +178,10 @@ export async function renovateRepository(
   const cloned = isCloned();
   logger.info({ cloned, durationMs: splits.total }, 'Repository finished');
   resetRepositoryLogLevelRemaps();
+
+  const urls = HttpStats.getReport().urls;
+  saveObject(config, 'request-urls', urls);
+
   return repoResult;
 }
 

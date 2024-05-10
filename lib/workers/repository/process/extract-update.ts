@@ -200,7 +200,9 @@ export async function lookup(
     { baseBranch: config.baseBranch, config: packageFiles },
     'packageFiles with updates',
   );
-  sortBranches(branches);
+
+  await sortBranches(branches);
+
   return { branches, branchList, packageFiles };
 }
 

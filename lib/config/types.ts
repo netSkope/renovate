@@ -213,6 +213,10 @@ export const allowedStatusCheckStrings = [
 export type StatusCheckKey = (typeof allowedStatusCheckStrings)[number];
 export type UserEnv = Record<string, string>;
 
+export type HigherPriorityHandleModeConfigType =
+  | 'exceed-concurrent-limit'
+  | 'none';
+
 // TODO: Proper typings
 export interface RenovateConfig
   extends LegacyAdminConfig,
@@ -264,6 +268,7 @@ export interface RenovateConfig
   prConcurrentLimit?: number;
   prHourlyLimit?: number;
   forkModeDisallowMaintainerEdits?: boolean;
+  higherPriorityHandleMode?: HigherPriorityHandleModeConfigType;
 
   defaultRegistryUrls?: string[];
   registryUrls?: string[] | null;
