@@ -181,7 +181,10 @@ export async function writeUpdates(
       // Stop processing other branches because base branch has been changed
       return 'automerged';
     }
-    if (!branchExisted && (await scm.branchExists(branch.branchName))) {
+    const shouldIncrement =
+      !branchExisted ||
+      config.higherPriorityHandleMode === 'exceed-concurrent-limit';
+    if (shouldIncrement && (await scm.branchExists(branch.branchName))) {
       incLimitedValue('Branches');
     }
   }
