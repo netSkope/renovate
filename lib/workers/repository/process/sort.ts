@@ -4,7 +4,7 @@ import { branchExists } from '../../../util/git';
 import type { BranchConfig } from '../../types';
 
 export async function sortBranches(
-  branches: Partial<BranchConfig>[]
+  branches: Partial<BranchConfig>[],
 ): Promise<void> {
   // Sort branches
   const sortOrder = [
@@ -38,6 +38,13 @@ export async function sortBranches(
   }
 
   branches.sort((a, b) => {
+    if (a.automerge && !b.automerge) {
+      return -1;
+    }
+    if (!a.automerge && b.automerge) {
+      return 1;
+    }
+
     if (a.isVulnerabilityAlert && !b.isVulnerabilityAlert) {
       return -1;
     }
