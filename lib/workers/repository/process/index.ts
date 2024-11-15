@@ -1,4 +1,5 @@
 // TODO #22198
+import fs from 'fs-extra';
 import { mergeChildConfig } from '../../../config';
 import { GlobalConfig } from '../../../config/global';
 import { resolveConfigPresets } from '../../../config/presets';
@@ -76,8 +77,9 @@ async function getBaseBranchConfig(
     baseBranchConfig.baseBranches = config.baseBranches;
   }
 
-  if (config.baseBranches!.length > 1) {
+  if (baseBranch !== baseBranchConfig.defaultBranch) {
     baseBranchConfig.branchPrefix += `${baseBranch}-`;
+    baseBranchConfig.branchPrefixOld += `${baseBranch}-`;
     baseBranchConfig.hasBaseBranches = true;
   }
 
@@ -112,6 +114,36 @@ function unfoldBaseBranches(
   return [...new Set(unfoldedList)];
 }
 
+function savePackageFiles(
+  repository: string,
+  baseBranch: string,
+  object: any
+): void {
+  const root = '/tmp/renovate-output';
+  if (!fs.existsSync(root)) {
+    return;
+  }
+
+  const [org, repo] = repository.split('/');
+  if (org === '' || repo === '') {
+    return;
+  }
+
+  const directory = [root, org].join('/');
+  const escapeBaseBranch = baseBranch.replace(/\//g, '#slash#');
+
+  const filepath = [
+    directory,
+    [repo, escapeBaseBranch, 'package-files.json'].join(','),
+  ].join('/');
+  try {
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(filepath, JSON.stringify(object));
+  } catch (err) {
+    logger.error({ err }, 'Failed to save the output packageFiles file');
+  }
+}
+
 export async function extractDependencies(
   config: RenovateConfig,
 ): Promise<ExtractResult> {
@@ -144,9 +176,12 @@ export async function extractDependencies(
         const baseBranchConfig = await getBaseBranchConfig(baseBranch, config);
         const packageFiles = extracted[baseBranch];
         const baseBranchRes = await lookup(baseBranchConfig, packageFiles);
+
         res.branches = res.branches.concat(baseBranchRes?.branches);
         res.branchList = res.branchList.concat(baseBranchRes?.branchList);
         res.packageFiles = res.packageFiles || baseBranchRes?.packageFiles; // Use the first branch
+
+        savePackageFiles(config['repository'] ?? '', baseBranch, packageFiles);
       }
     }
     removeMeta(['baseBranch']);
@@ -160,6 +195,12 @@ export async function extractDependencies(
       return res;
     }
     res = await lookup(config, packageFiles);
+
+    savePackageFiles(
+      config['repository'] ?? '',
+      config.baseBranch ?? '',
+      packageFiles
+    );
   }
   addSplit('lookup');
   return res;

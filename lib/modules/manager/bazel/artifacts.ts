@@ -127,6 +127,16 @@ export async function updateArtifacts(
 
       const updateValues = (oldUrl: string): string => {
         let url = oldUrl;
+        // workaround for bug in the renovate logic where these url comes here already updated
+        // in case it is already updated and the current version is substring of the new version
+        // applying the replace again will make the url wrong.
+        // I though do not know if there are scenarios in which this arrives unreplaces. This is
+        // why I am making this change as a workaround
+
+        if (upgrade.newValue!.includes(upgrade.currentValue!)) {
+          url = replaceValues(url, upgrade.newValue, upgrade.currentValue);
+        }
+
         url = replaceValues(url, upgrade.currentValue, upgrade.newValue);
         url = replaceValues(url, upgrade.currentDigest, upgrade.newDigest);
         return url;

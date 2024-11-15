@@ -177,6 +177,18 @@ function getListItem(branch: BranchConfig, type: string): string {
   return item + ' (' + uniquePackages.join(', ') + ')\n';
 }
 
+function getShortListItem(branch: BranchConfig, type: string): string {
+  let item = ' - [ ] ';
+  item += `<!-- ${type}-branch=${branch.branchName} -->`;
+  if (branch.prNo) {
+    // TODO: types (#22198)
+    item += `[${branch.prTitle!}](../pull/${branch.prNo})`;
+  } else {
+    item += branch.prTitle;
+  }
+  return item + '\n';
+}
+
 function appendRepoProblems(config: RenovateConfig, issueBody: string): string {
   let newIssueBody = issueBody;
   const repoProblems = extractRepoProblems(config.repository);
@@ -366,9 +378,13 @@ export async function ensureDependencyDashboard(
     issueBody +=
       'These updates are currently rate-limited. Click on a checkbox below to force their creation now.\n\n';
     for (const branch of rateLimited) {
-      issueBody += getListItem(branch, 'unlimit');
+      if (rateLimited.length > 100) {
+        issueBody += getShortListItem(branch, 'unlimit');
+      } else {
+        issueBody += getListItem(branch, 'unlimit');
+      }
     }
-    if (rateLimited.length > 1) {
+    if (rateLimited.length > 1 && rateLimited.length < 20) {
       issueBody += ' - [ ] ';
       issueBody += '<!-- create-all-rate-limited-prs -->';
       issueBody += '🔐 **Create all rate-limited PRs at once** 🔐\n';
