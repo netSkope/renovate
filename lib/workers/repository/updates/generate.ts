@@ -64,6 +64,25 @@ function getTableValues(upgrade: BranchUpgradeConfig): string[] | null {
   return null;
 }
 
+function represented(dependencyName: string, groupName: string): boolean {
+  // TODO: explore why in some cases dependencyName is undefined
+  if (typeof dependencyName !== 'string') {
+    return false;
+  }
+  if (groupName.includes(dependencyName)) {
+    return true;
+  }
+  const parts = dependencyName.split('/');
+  if (parts.some((part) => groupName.includes(part))) {
+    return true
+  }
+  if (groupName.includes("org-base") || groupName.includes("ns-libs")) {
+    return true
+  }
+
+  return false
+}
+
 function compileCommitMessage(upgrade: BranchUpgradeConfig): string {
   if (upgrade.semanticCommits === 'enabled' && !upgrade.commitMessagePrefix) {
     logger.trace('Upgrade has semantic commits enabled');
@@ -232,10 +251,14 @@ export function generateBranchConfig(
       }
     }
   }
+
+  const groupName = branchUpgrades[0].groupName ?? '';
+
   const groupEligible =
     depNames.length > 1 ||
     toVersions.length > 1 ||
-    (!toVersions[0] && newValue.length > 1);
+    (!toVersions[0] && newValue.length > 1) ||
+    (depNames.length === 1 && represented(depNames[0], groupName));
 
   const typesGroup =
     depNames.length > 1 && !hasGroupName && isTypesGroup(branchUpgrades);

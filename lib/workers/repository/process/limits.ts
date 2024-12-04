@@ -46,6 +46,14 @@ export async function getConcurrentPrsRemaining(
 ): Promise<number> {
   if (config.prConcurrentLimit) {
     logger.debug(`Calculating prConcurrentLimit (${config.prConcurrentLimit})`);
+
+    if (config.higherPriorityHandleMode === 'exceed-concurrent-limit') {
+      // When exceed-concurrent-limit is enabled, we need to return the whole allowed list.
+      // This relies on the fact the the branches are sorted based on existence first, to
+      // keep this of generating more and more concurrent branches.
+      return config.prConcurrentLimit;
+    }
+
     try {
       const openPrs: Pr[] = [];
       for (const { branchName } of branches) {
@@ -102,6 +110,14 @@ export async function getConcurrentBranchesRemaining(
       : prConcurrentLimit;
   if (typeof limit === 'number' && limit) {
     logger.debug(`Calculating branchConcurrentLimit (${limit})`);
+
+    if (config.higherPriorityHandleMode === 'exceed-concurrent-limit') {
+      // When exceed-concurrent-limit is enabled, we need to return the whole allowed list.
+      // This relies on the fact the the branches are sorted based on existence first, to
+      // keep this of generating more and more concurrent branches.
+      return limit;
+    }
+
     try {
       const existingBranches: string[] = [];
       for (const branch of branches) {
