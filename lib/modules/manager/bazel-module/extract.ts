@@ -50,8 +50,12 @@ async function extractBazelPfc(
     .filter((ce) => ce.config === undefined)
     .map((ce) => ce.getOption('registry')?.value)
     .filter(isNotNullOrUndefined);
-  if (registryUrls.length) {
-    pfc.registryUrls = registryUrls;
+  if (registryUrls.length && pfc.deps) {
+    pfc.deps.forEach((dep) => {
+      if (dep.depType === 'bazel_dep') {
+        dep.registryUrls = registryUrls;
+      }
+    });
   }
 
   return pfc;
