@@ -28,14 +28,30 @@ export const RuleToDockerPackageDep = RecordFragmentSchema.extend({
 );
 
 export const ociRules = q
-  .sym<Ctx>('oci')
+  .sym<Ctx>('oci', (ctx, token) => {
+    ctx.startRule('oci_pull');
+    ctx.currentRecord.start = token.offset;
+    return ctx;
+  })
   .op('.')
-  .sym('pull', (ctx, token) => ctx.startRule('oci_pull'))
+  .sym('pull')
   .join(
     q.tree({
       type: 'wrapped-tree',
       maxDepth: 1,
       search: kvParams,
-      postHandler: (ctx) => ctx.endRule(),
+      postHandler: (ctx, tree) => {
+        const findLastToken = (node: any) => {
+          if (node.children && node.children.length > 0) {
+            return findLastToken(node.children[node.children.length - 1]);
+          }
+          return node;
+        };
+
+        const token = findLastToken(tree);
+        ctx.currentRecord.end = token.offset + token.value.length + 1;
+        ctx.endRule();
+        return ctx;
+      },
     }),
   );

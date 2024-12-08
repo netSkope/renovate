@@ -67,11 +67,6 @@ function extractMavenDeps(records: RecordFragment[]): PackageDependency[] {
     .parse(records);
 }
 
-interface PositionedRecordFragment extends RecordFragment {
-  start: number;
-  end: number;
-}
-
 function extractDockerDeps(
   records: RecordFragment[],
   content: string,
@@ -80,8 +75,10 @@ function extractDockerDeps(
   for (let i = 0; i < records.length; i++) {
     const parsedItem = LooseArray(RuleToDockerPackageDep).parse([records[i]]);
     if (parsedItem.length == 1) {
-      const { start, end } = records[i] as PositionedRecordFragment;
-      parsedItem[0].replaceString = content.slice(start, end);
+      parsedItem[0].replaceString = content.slice(
+        records[i].start,
+        records[i].end,
+      );
 
       if (parsedItem[0].packageName?.startsWith('artifactory-rd.netskope.io')) {
         parsedItem[0].registryUrls = ['artifactory.netskope.io'];

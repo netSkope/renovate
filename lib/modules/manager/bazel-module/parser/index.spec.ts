@@ -300,7 +300,9 @@ describe('modules/manager/bazel-module/parser/index', () => {
 
       const res = parse(input);
       expect(res).toEqual([
-        fragments.record(
+        fragments.position_record(
+          0,
+          213,
           {
             rule: fragments.string('oci_pull'),
             name: fragments.string('nginx_image'),

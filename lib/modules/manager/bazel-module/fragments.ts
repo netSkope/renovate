@@ -33,6 +33,8 @@ const ValueFragmentsSchema = z.discriminatedUnion('type', [
 ]);
 export const RecordFragmentSchema = z.object({
   type: z.literal('record'),
+  start: z.number().optional(),
+  end: z.number().optional(),
   children: LooseRecord(ValueFragmentsSchema),
   isComplete: z.boolean(),
 });
@@ -81,6 +83,21 @@ export function record(
   isComplete = false,
 ): RecordFragment {
   return {
+    type: 'record',
+    isComplete,
+    children,
+  };
+}
+
+export function position_record(
+  start: number,
+  end: number,
+  children: ChildFragments = {},
+  isComplete = false,
+): RecordFragment {
+  return {
+    start: start,
+    end: end,
     type: 'record',
     isComplete,
     children,
