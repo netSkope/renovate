@@ -82,6 +82,10 @@ function extractDockerDeps(
     if (parsedItem.length == 1) {
       const { start, end } = records[i] as PositionedRecordFragment;
       parsedItem[0].replaceString = content.slice(start, end);
+
+      if (parsedItem[0].packageName?.startsWith('artifactory-rd.netskope.io')) {
+        parsedItem[0].registryUrls = ['artifactory.netskope.io'];
+      }
     }
     parsedRecords = parsedRecords.concat(parsedItem);
   }
