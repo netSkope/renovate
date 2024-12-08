@@ -9,6 +9,7 @@ import { GithubTagsDatasource } from '../../datasource/github-tags';
 import { MavenDatasource } from '../../datasource/maven';
 import * as parser from './parser';
 import { extractPackageFile } from '.';
+import { registryUrl } from '../../datasource/endoflife-date/common';
 
 const adminConfig: RepoGlobalConfig = {
   localDir: upath.resolve('lib/modules/manager/bazel-module/__fixtures__'),
@@ -101,16 +102,16 @@ describe('modules/manager/bazel-module/extract', () => {
         throw new Error('Expected a result.');
       }
       expect(result).toEqual({
-        registryUrls: [
-          'https://example.com/custom_registry.git',
-          'https://github.com/bazelbuild/bazel-central-registry',
-        ],
         deps: [
           {
             datasource: BazelDatasource.id,
             depType: 'bazel_dep',
             depName: 'rules_foo',
             currentValue: '1.2.3',
+            registryUrls: [
+              'https://example.com/custom_registry.git',
+              'https://github.com/bazelbuild/bazel-central-registry',
+            ],
           },
         ],
       });
@@ -315,6 +316,7 @@ describe('modules/manager/bazel-module/extract', () => {
           currentValue: '1.27.1',
           currentDigest:
             'sha256:287ff321f9e3cde74b600cc26197424404157a72043226cbbf07ee8304a2c720',
+          replaceString: input.trim(),
         },
       ]);
     });
@@ -341,6 +343,7 @@ describe('modules/manager/bazel-module/extract', () => {
           packageName: 'index.docker.io/library/nginx',
           currentDigest:
             'sha256:287ff321f9e3cde74b600cc26197424404157a72043226cbbf07ee8304a2c720',
+          replaceString: input.trim(),
         },
       ]);
     });

@@ -19,7 +19,7 @@ export async function extractPackageFile(
     const records = parse(content);
     const pfc = await extractBazelPfc(records, packageFile);
     const mavenDeps = extractMavenDeps(records);
-    const dockerDeps = LooseArray(RuleToDockerPackageDep).parse(records);
+    const dockerDeps = extractDockerDeps(records, content);
 
     if (mavenDeps.length) {
       pfc.deps.push(...mavenDeps);
@@ -65,4 +65,22 @@ function extractMavenDeps(records: RecordFragment[]): PackageDependency[] {
   return LooseArray(RuleToMavenPackageDep)
     .transform(fillRegistryUrls)
     .parse(records);
+}
+
+function extractDockerDeps(
+  records: RecordFragment[],
+  content: string,
+): PackageDependency[] {
+  let parsedRecords: PackageDependency[] = [];
+  for (let i = 0; i < records.length; i++) {
+    const parsedItem = LooseArray(RuleToDockerPackageDep).parse([records[i]]);
+    if (parsedItem.length == 1) {
+      parsedItem[0].replaceString = content.slice(
+        records[i].start,
+        records[i].end,
+      );
+    }
+    parsedRecords = parsedRecords.concat(parsedItem);
+  }
+  return parsedRecords;
 }
