@@ -27,7 +27,6 @@ import { isArtifactoryServer } from '../util';
 import {
   DOCKER_HUB,
   dockerDatasourceId,
-  extractDigestFromResponseBody,
   findHelmSourceUrl,
   findLatestStable,
   getAuthHeaders,
@@ -925,7 +924,6 @@ export class DockerDatasource extends Datasource {
             { registryHost, dockerRepository, newTag },
             'Extraction digest from manifest response body is deprecated',
           );
-          // digest = extractDigestFromResponseBody(manifestResponse!);
           throw new Error('Failed to extract digest from manifest response');
         }
       }
