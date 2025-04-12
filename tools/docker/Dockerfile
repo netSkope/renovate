@@ -55,7 +55,12 @@ ENV CI=1 npm_config_modules_cache_max_age=0 \
 # replace `amd64` with `x64` for `node`
 ENV ARCH=${TARGETARCH/amd64/x64}
 
-COPY --link pnpm-lock.yaml ./
+# install corepack globally before using it
+RUN set -ex; \
+  npm install -g corepack@0.31; \
+  true
+
+COPY --link . ./
 
 # set `npm_config_arch` for `prebuild-install`
 # set `npm_config_platform_arch` for `install-artifact-from-github`
@@ -63,14 +68,11 @@ COPY --link pnpm-lock.yaml ./
 RUN set -ex; \
   export npm_config_arch=${ARCH} npm_config_platform_arch=${ARCH}; \
   corepack pnpm fetch --prod; \
-  true
-
-COPY --link . ./
-
-# install npm packages
-RUN set -ex; \
+  corepack pnpm add https://registry.npmjs.org/@aws-sdk/client-codecommit/-/client-codecommit-3.699.0.tgz ; \
   corepack pnpm install --prod --offline --ignore-scripts; \
   true
+
+
 
 # --------------------------------------
 # final image
@@ -97,7 +99,7 @@ RUN ln -sf /usr/local/renovate/node /bin/node
 
 # ensure default base and cache directories exist.
 RUN mkdir -p /tmp/renovate/cache && \
-    chmod -R 777 /tmp/renovate
+  chmod -R 777 /tmp/renovate
 
 # test
 RUN set -ex; \
