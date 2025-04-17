@@ -68,7 +68,7 @@ COPY --link . ./
 RUN set -ex; \
   export npm_config_arch=${ARCH} npm_config_platform_arch=${ARCH}; \
   corepack pnpm fetch --prod; \
-  corepack pnpm add https://registry.npmjs.org/@aws-sdk/client-codecommit/-/client-codecommit-3.699.0.tgz ; \
+  corepack pnpm add https://artifactory-rd.netskope.io/artifactory/api/npm/npm-remote/@aws-sdk/client-codecommit/-/client-codecommit-3.699.0.tgz ; \
   corepack pnpm install --prod --offline --ignore-scripts; \
   true
 
